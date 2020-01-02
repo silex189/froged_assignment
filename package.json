@@ -1,0 +1,25 @@
+{
+  "name": "froged_assignment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silex189/froged_assignment.git"
+  },
+  "keywords": [
+    "nodejs",
+    "expressjs",
+    "trello",
+    "typescript"
+  ],
+  "author": "silex189",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/silex189/froged_assignment/issues"
+  },
+  "homepage": "https://github.com/silex189/froged_assignment#readme"
+}
