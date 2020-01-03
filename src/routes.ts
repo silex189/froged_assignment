@@ -6,12 +6,11 @@ const DB_NAME = "froged";
 export class Routes {
 
     static listenedRoutes(app: Express) {
-
         // test
         app.get('/', async function (req, res) {
 
             const db = mongo.instance().db(DB_NAME);
-            const card = await db.collection("cards").find({}).toArray();
+            // const card = await db.collection("cards").find({}).toArray();
 
             // res.json( 
             //     { message: "/ directory", 
@@ -21,7 +20,6 @@ export class Routes {
             const body = req.body;
             res.json(body.name);
         });
-
 
         // assignment
         app.post("/lists", async function(req,res) {
@@ -62,7 +60,6 @@ export class Routes {
                     }
                 })
 
-
             res.json(
                 { 
                     message: `PUT /lists ${idList}, body: ${req.body}`,
@@ -77,7 +74,6 @@ export class Routes {
             
             const db = mongo.instance().db(DB_NAME);
             const lists = await db.collection("lists").find().toArray();
-
 
             res.json( 
                 { 
@@ -127,12 +123,12 @@ export class Routes {
                 }
                 )
                 
-                res.json( 
-                    { 
-                        message: `POST /lists ${idList} /cards`,
-                        card: body
-                    });
+            res.json( 
+                { 
+                    message: `POST /lists ${idList} /cards`,
+                    card: body
                 });
+            });
                 
                 
         app.put('/lists/:idList/cards/:idCard', async function(req, res) {
@@ -141,10 +137,8 @@ export class Routes {
             let newCardName = req.body.newName;
 
             const db = mongo.instance().db(DB_NAME);
-            
             const trelloList = await db.collection("lists").findOne( 
                 { trelloListId: idList });
-                
                 
             let trelloCard;
             
@@ -167,6 +161,7 @@ export class Routes {
                         }
                     }
                 })
+
             await db.collection("lists").updateOne(
                 {
                     trelloListId: idList
@@ -187,7 +182,6 @@ export class Routes {
                 });
 
         });
-
 
         app.put('/lists/:idList/cards/:idCard/to/:idDestinationList', async function (req, res) {
             let idList = req.params.idList;
@@ -265,14 +259,13 @@ export class Routes {
                     message: `DELETE /lists ${idList} /cards ${idCard}`,
                     info: `card with id: ${idCard} from list with id: ${idList} was deleted`
                 });
-            });
+        });
                 
                 
         app.delete('/lists/:idList', async function(req, res) {
             let idList = req.params.idList;
 
             const db = mongo.instance().db(DB_NAME);
-
             await db.collection("lists").deleteOne(
                 {
                     trelloListId: idList
@@ -283,13 +276,43 @@ export class Routes {
                 { 
                     message: `DELETE /lists ${idList}`,
                     info: `list with id: ${idList} was deleted`
-                });
+                }
+            );
         })
 
+        app.get('/board', async function(req, res) {
 
-        app.get('/board', function(req, res) {
+            const db = mongo.instance().db(DB_NAME);
+            let lists = await db.collection("lists").find().toArray();
 
-            res.json( { message: `GET /board`});
+            function dynamicSort(property: any) {
+                let sortOrder = 1;
+            
+                if (property[0] === "-") {
+                    sortOrder = -1;
+                    property = property.substr(1);
+                }
+            
+                return function (a: any,b: any) {
+                    if(sortOrder == -1){
+                        return b[property].localeCompare(a[property]);
+                    } else {
+                        return a[property].localeCompare(b[property]);
+                    }        
+                }
+            }
+
+            lists.sort(dynamicSort("name"));
+            
+            for(let i = 0; i < lists.length; ++i) {
+                lists[i].cardsList.sort(dynamicSort("name"))
+            }
+
+            res.json( 
+                { 
+                    message: `GET /board`,
+                    sortedLists: lists
+                });
         })
     }
 }
