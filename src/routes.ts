@@ -6,41 +6,42 @@ const DB_NAME = "froged";
 export class Routes {
 
     static listenedRoutes(app: Express) {
+        const db = mongo.instance().db(DB_NAME);
+        
         // test
-        app.get('/', async function (req, res) {
-
-            const db = mongo.instance().db(DB_NAME);
-            // const card = await db.collection("cards").find({}).toArray();
-
-            // res.json( 
-            //     { message: "/ directory", 
-            //       mongoMessage: card[0].name 
-            //     }
-            // );
-            const body = req.body;
-            res.json(body.name);
+        app.get('/', async (req, res) => {
+            const message = req.body.message;
+            
+            res.status(200).json(
+                {
+                    URL: "GET /",
+                    request_body: {
+                        message: message
+                    }
+                });
         });
 
         // assignment
         app.post("/lists", async function(req,res) {
-            const body = req.body;
+            const trelloListId = req.body.trelloListId;
+            const name = req.body.name;
+            const cardsList = req.body.cardsList;
 
-            const trelloListId = body.trelloListId;
-            const name = body.name;
-
-            const db = mongo.instance().db(DB_NAME);
-            await db.collection("lists").insert( 
+            await db.collection("lists").insertOne( 
                 {
                     trelloListId: `${trelloListId}`,
-                    name: `${name}`
+                    name: `${name}`,
+                    cardsList: cardsList
                 });
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: "POST /lists", 
-                    response_body: { 
-                        trelloListId: body.trelloListId, 
-                        name: body.name 
+                    URL: "POST /lists",
+                    message: "Creating a list from body data",
+                    request_body: { 
+                        trelloListId: trelloListId, 
+                        name: name,
+                        cardsList: cardsList
                     }  
                 });
         })
@@ -49,7 +50,6 @@ export class Routes {
             const idList = req.params.idList;
             const name = req.body.name;
 
-            const db = mongo.instance().db(DB_NAME);
             await db.collection("lists").updateOne( 
                 { 
                     trelloListId: `${idList}`
@@ -60,42 +60,41 @@ export class Routes {
                     }
                 })
 
-            res.json(
+            res.status(200).json(
                 { 
-                    message: `PUT /lists ${idList}, body: ${req.body}`,
-                    response_body: {
-                        trelloListId: `${idList}`,
-                        name: `${name}`
-                    }
+                    URL: `PUT /lists /idLists: ${idList}`,
+                    message: "Updating a list name",
+                    request_body: req.body
+                    
                  });
         })
 
         app.get('/lists', async function(req, res) {
-            
-            const db = mongo.instance().db(DB_NAME);
+
             const lists = await db.collection("lists").find().toArray();
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `GET /lists`,
+                    URL: "GET /lists",
+                    message: "showing all lists from DB",
                     lists: lists
                 })
         })
 
 
         app.get('/lists/:idList', async function(req, res) {
-            let idList = req.params.idList;
+            const idList = req.params.idList;
 
-            const db = mongo.instance().db(DB_NAME);
             const list = await db.collection("lists").findOne(
                 {
                     trelloListId: `${idList}`
                 }
             )
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `GET /lists ${idList}`,
+                    URL: `GET /lists /idLists: ${idList}`,
+                    message: "showing a concrete list from DB",
                     list: list
                 });
         })
@@ -104,7 +103,6 @@ export class Routes {
             const idList = req.params.idList;
             const body = req.body;
             
-            const db = mongo.instance().db(DB_NAME);
             await db.collection("lists").updateOne(
                 {
                     trelloListId: idList,
@@ -123,20 +121,19 @@ export class Routes {
                 }
                 )
                 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `POST /lists ${idList} /cards`,
+                    URL: `POST /lists /idList: ${idList} /cards`,
+                    message: "posting a card in a list",
                     card: body
                 });
             });
-                
-                
+                       
         app.put('/lists/:idList/cards/:idCard', async function(req, res) {
-            let idList = req.params.idList;
-            let idCard = req.params.idCard;
-            let newCardName = req.body.newName;
+            const idList = req.params.idList;
+            const idCard = req.params.idCard;
+            const newCardName = req.body.newName;
 
-            const db = mongo.instance().db(DB_NAME);
             const trelloList = await db.collection("lists").findOne( 
                 { trelloListId: idList });
                 
@@ -172,23 +169,23 @@ export class Routes {
                     }
                 });
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `PUT /lists ${idList} /cards ${idCard}`,
+                    URL: `PUT /lists /idList: ${idList} /cards /idCard: ${idCard}`,
+                    message: "renaming a card",
                     card: { 
                         idCard: trelloCard.trelloCardId,
-                        cardName: trelloCard.name
+                        newCardName: trelloCard.name
                     }
                 });
 
         });
 
         app.put('/lists/:idList/cards/:idCard/to/:idDestinationList', async function (req, res) {
-            let idList = req.params.idList;
-            let idCard = req.params.idCard;
-            let idDestinationList = req.params.idDestinationList;
+            const idList = req.params.idList;
+            const idCard = req.params.idCard;
+            const idDestinationList = req.params.idDestinationList;
 
-            const db = mongo.instance().db(DB_NAME);
             const prevTrelloList = await db.collection("lists").findOne( 
                 { 
                     trelloListId: idList 
@@ -225,21 +222,17 @@ export class Routes {
                     }
                 });
             
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `PUT /lists ${idList} /cards ${idCard} /to ${idDestinationList}`,
-                    card: { 
-                        idCard: trelloCard.trelloCardId,
-                        cardName: trelloCard.name
-                    }
+                    URL: `PUT /lists /idList: ${idList} /cards /idCard: ${idCard} /to /idDestinationList: ${idDestinationList}`,
+                    message: "moving a card from a list to another one",
+                    card: trelloCard
                 });
         });
 
         app.delete('/lists/:idList/cards/:idCard', async function(req, res) {
-            let idList = req.params.idList;
-            let idCard = req.params.idCard;
-            
-            const db = mongo.instance().db(DB_NAME);
+            const idList = req.params.idList;
+            const idCard = req.params.idCard;
             
             await db.collection("lists").updateOne( 
                 {
@@ -254,27 +247,27 @@ export class Routes {
                     }
                 });
  
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `DELETE /lists ${idList} /cards ${idCard}`,
-                    info: `card with id: ${idCard} from list with id: ${idList} was deleted`
+                    URL: `DELETE /lists /idList: ${idList} /cards /idCard: ${idCard}`,
+                    message: "Deleting a card from a list",
+                    info: `card with id: ${idCard} from list with id: ${idList} was deleted`,
                 });
         });
-                
-                
+                 
         app.delete('/lists/:idList', async function(req, res) {
-            let idList = req.params.idList;
+            const idList = req.params.idList;
 
-            const db = mongo.instance().db(DB_NAME);
             await db.collection("lists").deleteOne(
                 {
                     trelloListId: idList
                 }
             )
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `DELETE /lists ${idList}`,
+                    URL: `DELETE /lists /idList: ${idList}`,
+                    message: "deleting a list",
                     info: `list with id: ${idList} was deleted`
                 }
             );
@@ -282,7 +275,6 @@ export class Routes {
 
         app.get('/board', async function(req, res) {
 
-            const db = mongo.instance().db(DB_NAME);
             let lists = await db.collection("lists").find().toArray();
 
             function dynamicSort(property: any) {
@@ -308,9 +300,10 @@ export class Routes {
                 lists[i].cardsList.sort(dynamicSort("name"))
             }
 
-            res.json( 
+            res.status(200).json( 
                 { 
-                    message: `GET /board`,
+                    URL: `GET /board`,
+                    message: "showing all lists alphabetically sorted",
                     sortedLists: lists
                 });
         })
