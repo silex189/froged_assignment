@@ -1,17 +1,15 @@
 const MongoClient = require('mongodb').MongoClient;
-const DB_NAME = "froged";
-const DB_HOST = "localhost";
-const DB_PORT = 27017;
+import { DB_HOST, DB_PORT, DB_NAME } from './config';
+
 const connectionUrl = `mongodb://${DB_HOST}:${DB_PORT}`;
 
-
-module.exports = (()=>{
+export = (()=>{
     let instance: any = null,
         isDisconnecting = false;
 
     function connect() {
         return new Promise((resolve, reject)=>{
-            MongoClient.connect(connectionUrl, { useNewUrlParser: true }, function(err: any, client: any) {
+            MongoClient.connect(connectionUrl, { useNewUrlParser: true, useUnifiedTopology: true }, function(err: any, client: any) {
                 if (err) { reject(err); }
                 console.log("MongoDB connection established!");
                 instance = client;

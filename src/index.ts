@@ -1,8 +1,8 @@
 import express = require('express');
-const mongo: any = require("./db/connect");
+import mongo = require("./db/connect");
 import bodyParser = require('body-parser');
 import { Routes } from './routes';
-const EXPRESS_PORT = 3000;
+import { EXPRESS_PORT } from './config';
 
 var app: express.Express = express();
 
@@ -15,7 +15,7 @@ async function initApp(){
 }
 
 async function initExpress(){
-    Routes.listenedRoutes(app);
+    Routes.listenedRoutes(app, mongo);
     console.log("Initializing Express instance...");
     app.listen(EXPRESS_PORT, ()=>{
         console.log(`App listening on port ${EXPRESS_PORT}.`);

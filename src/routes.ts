@@ -1,11 +1,9 @@
-import { Express, Request, Response, NextFunction } from 'express';
-import bodyParser = require('body-parser');
-const mongo: any = require("./db/connect");
-const DB_NAME = "froged";
+import { Express } from 'express';
+import { DB_NAME } from './db/config';
 
 export class Routes {
 
-    static listenedRoutes(app: Express) {
+    static listenedRoutes(app: Express, mongo: any) {
         const db = mongo.instance().db(DB_NAME);
         
         // test
