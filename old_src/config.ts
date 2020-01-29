@@ -1,0 +1,1 @@
+export const EXPRESS_PORT: number = 3000;

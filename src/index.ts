@@ -1,32 +1,24 @@
-import express = require('express');
-import mongo = require("./db/connect");
-import bodyParser = require('body-parser');
-import { Routes } from './routes';
-import { EXPRESS_PORT } from './config';
+const mongoose = require('mongoose');
+const app = require('./app');
+import { DB, EXPRESS_PORT } from './config';
 
-var app: express.Express = express();
 
-app.use(bodyParser.urlencoded( { limit: '10mb', extended: true }));
-app.use(bodyParser.json( { limit: '10mb' }));
-
-async function initApp(){
-    const db = await mongo.connect();
-    if (db) { initExpress(); }
+function initDB() {
+  const mongooseOptions = { useNewUrlParser: true, useUnifiedTopology: true };
+ 
+  mongoose.connect(DB, mongooseOptions, (err: any, req: any) => {
+    if (err) {
+      return console.log(`Error: ${err}`);
+    }
+    
+    console.log(`DB connection stablished...`);
+    initApp();
+  })
 }
 
-async function initExpress(){
-    Routes.listenedRoutes(app, mongo);
-    console.log("Initializing Express instance...");
-    app.listen(EXPRESS_PORT, ()=>{
-        console.log(`App listening on port ${EXPRESS_PORT}.`);
-    });
-    process.on("SIGINT", closeApp);
-    process.on("SIGTERM", closeApp);
+function initApp() {
+  app.listen(EXPRESS_PORT, () => {
+    console.log(`App listening on port ${EXPRESS_PORT}...`);
+  })
 }
-
-function closeApp(){
-    mongo.disconnect()
-        .then(()=>process.exit(0));
-}
-
-initApp();
+initDB();
